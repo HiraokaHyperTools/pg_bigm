@@ -32,6 +32,7 @@
 #include "utils/array.h"
 #include "utils/builtins.h"
 #include "utils/rel.h"
+#include "pgut/pgut-be.h"
 
 
 PG_FUNCTION_INFO_V1(gin_extract_value_bigm);
@@ -59,6 +60,7 @@ Datum		pg_gin_pending_stats(PG_FUNCTION_ARGS);
 #endif
 
 Datum
+PGDLLEXPORT 
 gin_extract_value_bigm(PG_FUNCTION_ARGS)
 {
 	text	   *val = (text *) PG_GETARG_TEXT_P(0);
@@ -94,6 +96,7 @@ gin_extract_value_bigm(PG_FUNCTION_ARGS)
 }
 
 Datum
+PGDLLEXPORT 
 gin_extract_query_bigm(PG_FUNCTION_ARGS)
 {
 	text	   *val = (text *) PG_GETARG_TEXT_P(0);
@@ -203,6 +206,7 @@ gin_extract_query_bigm(PG_FUNCTION_ARGS)
 }
 
 Datum
+PGDLLEXPORT 
 gin_bigm_consistent(PG_FUNCTION_ARGS)
 {
 	bool	   *check = (bool *) PG_GETARG_POINTER(0);
@@ -282,6 +286,7 @@ gin_bigm_consistent(PG_FUNCTION_ARGS)
 /* triConsistent function is available only in 9.4 or later */
 #if PG_VERSION_NUM >= 90400
 Datum
+PGDLLEXPORT 
 gin_bigm_triconsistent(PG_FUNCTION_ARGS)
 {
 	GinTernaryValue  *check = (GinTernaryValue *) PG_GETARG_POINTER(0);
@@ -346,6 +351,7 @@ gin_bigm_triconsistent(PG_FUNCTION_ARGS)
 #endif	/* PG_VERSION_NUM >= 90400 */
 
 Datum
+PGDLLEXPORT 
 gin_bigm_compare_partial(PG_FUNCTION_ARGS)
 {
 	text	   *arg1 = PG_GETARG_TEXT_PP(0);
@@ -374,6 +380,7 @@ gin_bigm_compare_partial(PG_FUNCTION_ARGS)
  * are in the pending list.
  */
 Datum
+PGDLLEXPORT 
 pg_gin_pending_stats(PG_FUNCTION_ARGS)
 {
 	Oid			indexOid = PG_GETARG_OID(0);

@@ -20,6 +20,7 @@
 #include "tsearch/ts_locale.h"
 #include "utils/array.h"
 #include "utils/memutils.h"
+#include "pgut/pgut-be.h"
 
 PG_MODULE_MAGIC;
 
@@ -550,6 +551,7 @@ generate_wildcard_bigm(const char *str, int slen, bool *removeDups)
 }
 
 Datum
+PGDLLEXPORT
 show_bigm(PG_FUNCTION_ARGS)
 {
 	text	   *in = PG_GETARG_TEXT_P(0);
@@ -631,6 +633,7 @@ cnt_sml_bigm(BIGM *bgm1, BIGM *bgm2)
 }
 
 Datum
+PGDLLEXPORT 
 bigm_similarity(PG_FUNCTION_ARGS)
 {
 	text	   *in1 = PG_GETARG_TEXT_P(0);
@@ -653,6 +656,7 @@ bigm_similarity(PG_FUNCTION_ARGS)
 }
 
 Datum
+PGDLLEXPORT 
 bigm_similarity_op(PG_FUNCTION_ARGS)
 {
 	float4		res = DatumGetFloat4(DirectFunctionCall2(bigm_similarity,
@@ -663,6 +667,7 @@ bigm_similarity_op(PG_FUNCTION_ARGS)
 }
 
 Datum
+PGDLLEXPORT 
 likequery(PG_FUNCTION_ARGS)
 {
 	text	   *query = PG_GETARG_TEXT_PP(0);
@@ -727,6 +732,7 @@ bigmstrcmp(char *arg1, int len1, char *arg2, int len2)
 }
 
 Datum
+PGDLLEXPORT 
 bigmtextcmp(PG_FUNCTION_ARGS)
 {
 	text	   *arg1 = PG_GETARG_TEXT_PP(0);
