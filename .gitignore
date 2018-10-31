@@ -5,3 +5,26 @@ regression.*
 
 # Generated subdirectories
 /results/
+
+/PG100_x86_v141_xp
+/PG94_x64_v141_xp
+/PG94_x86_v141_xp
+/PG95_x64_v141_xp
+/PG95_x86_v141_xp
+/PG96_x64_v141_xp
+/PG96_x86_v141_xp
+/PG100_x64_v141_xp
+/PG95_x86_v141_xp
+/PG91_x64_v141_xp
+/PG91_x86_v141_xp
+/PG92_x64_v141_xp
+/PG92_x86_v141_xp
+/PG93_x64_v141_xp
+/PG93_x86_v141_xp
+/PG94_x64_v141_xp
+/PG94_x86_v141_xp
+/PG95_x64_v141_xp
+/buildAll.cmd
+/packer.json
+/pack
+/packs
