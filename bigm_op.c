@@ -52,8 +52,8 @@ Datum		bigm_similarity(PG_FUNCTION_ARGS);
 Datum		bigm_similarity_op(PG_FUNCTION_ARGS);
 #endif
 
-void		_PG_init(void);
-void		_PG_fini(void);
+void		PGDLLEXPORT _PG_init(void);
+void		PGDLLEXPORT _PG_fini(void);
 
 void
 _PG_init(void)
