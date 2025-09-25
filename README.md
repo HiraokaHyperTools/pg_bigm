@@ -73,3 +73,53 @@ UTF-8 エンコード使用時は、 UTF-32 の文字数と同じです。
 ![](images/DuHJoW9WkAAps2b.jpg)
 
 こういった重そうなインデックス機能を使用したとしても、テーブル全体のシーケンシャルスキャンと比較して、高速 (検索時間の短縮) になるケースが感覚的には多いです。
+
+## キーワード検索への応用
+
+検索が複数列にわたる場合、複数のインデックスを作成しがちです。 しかし pg_bigm では複数列のインデックスを検索すると、かなりパフォーマンスが低下する傾向があります。
+
+あるいは、文字列を一定のルールで正規化 (ひらがな、半角英数字に変換) したいというニーズもよくあります。例: `バイグラムＢｉＧｒａｍ` → `ばいぐらむbigram`
+
+そこで、対象列を 1 つに合体するという方法が有効です。
+
+`col1||' '||col2` では NULL を含むケースでは NULL に変換されてしまいます。
+
+`coalesce(col1, '')||' '||coalesce(col2, '')` にすることで NULL 化を回避します。
+
+正規化の例として、全体に `lower()` を適用します: `lower(coalesce(col1, '')||' '||coalesce(col2, ''))`
+
+[CREATE INDEX](https://www.postgresql.jp/document/17/html/sql-createindex.html) で説明されているように、式に関数を使用する場合には制約があります。
+
+> インデックスの定義で使用される全ての関数と演算子は、「不変」（immutable）でなければなりません。 つまり、結果は入力引数にのみに依存し、（他のテーブルの内容や現時刻などの）外部からの影響を受けてはなりません。 この制限によって、インデックスの動作が十分定義されていることが保証されます。 インデックス式やWHERE句にユーザ定義の関数を使用する場合、関数を作成する際、IMMUTABLE（不変）オプションを付けることを忘れないでください。
+
+`lower()` など `IMMUTABLE` 属性の関数を使用する分には問題ありませんが、 自作の関数を使用する場合には注意が必要です。
+
+インデックスの生存期間中に、変換ルールが変化しないように注意する必要があります。
+
+もし変化してしまった場合は、 [REINDEX](https://www.postgresql.jp/document/17/html/sql-reindex.html) を手動で呼び出すなどして、インデックスの再構築をしましょう。
+
+利用例です。
+
+テーブルとインデックスを作成:
+
+```sql
+-- tests for creation of full-text search index
+CREATE TABLE test_bigm (col1 text, col2 text);
+CREATE INDEX test_bigm_idx ON test_bigm USING gin (lower(coalesce(col1, '')||' '||coalesce(col2, '')) gin_bigm_ops);
+```
+
+部分一致で検索。 `CREATE INDEX` で指定した式と、同じ式を `WHERE` 句へ記述します:
+
+```sql
+EXPLAIN SELECT col1 FROM test_bigm WHERE lower(coalesce(col1, '')||' '||coalesce(col2, '')) LIKE likequery(lower('東京都'));
+```
+
+EXPLAIN を使用。 インデックスが検索時に適用されている事 (`Bitmap Heap Scan` の使用) が確認できます:
+
+```
+QUERY PLAN
+Bitmap Heap Scan on test_bigm  (cost=12.00..16.02 rows=1 width=32)
+  Recheck Cond: (lower(((COALESCE(col1, ''::text) || ' '::text) || COALESCE(col2, ''::text))) ~~ '%東京都%'::text)
+  ->  Bitmap Index Scan on test_bigm_idx  (cost=0.00..12.00 rows=1 width=0)
+        Index Cond: (lower(((COALESCE(col1, ''::text) || ' '::text) || COALESCE(col2, ''::text))) ~~ '%東京都%'::text)
+```
