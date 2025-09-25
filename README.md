@@ -1,6 +1,6 @@
 # pg_bigm
 
-[pgbigm/pg_bigm: The pg_bigm module provides full text search capability in PostgreSQL. This module allows a user to create 2-gram (bigram) index for faster full text search.](https://github.com/pgbigm/pg_bigm) を、PostgreSQL 9.6 - 17.0 Windows 版で楽しめるように助力いたします。 自炊方法については build.md を参照。
+[pgbigm/pg_bigm](https://github.com/pgbigm/pg_bigm) を、PostgreSQL 9.6 - 17.0 Windows 版で楽しめるように助力いたします。 自炊方法については build.md を参照。
 
 ## インストール方法
 
@@ -114,7 +114,7 @@ CREATE INDEX test_bigm_idx ON test_bigm USING gin (lower(coalesce(col1, '')||' '
 EXPLAIN SELECT col1 FROM test_bigm WHERE lower(coalesce(col1, '')||' '||coalesce(col2, '')) LIKE likequery(lower('東京都'));
 ```
 
-EXPLAIN を使用。 インデックスが検索時に適用されている事 (`Bitmap Heap Scan` の使用) が確認できます:
+EXPLAIN を使用。 インデックスが検索時に適用されている事 (`Bitmap Index Scan` の使用) が確認できます:
 
 ```
 QUERY PLAN
