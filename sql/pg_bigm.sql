@@ -1,6 +1,7 @@
 CREATE EXTENSION pg_bigm;
 
 \pset null '(null)'
+\encoding UTF-8
 
 SET standard_conforming_strings = on;
 SET escape_string_warning = off;
@@ -41,9 +42,7 @@ CREATE INDEX test_bigm_idx ON test_bigm
 SELECT * FROM pg_gin_pending_stats('test_bigm_idx');
 VACUUM;
 SELECT * FROM pg_gin_pending_stats('test_bigm_idx');
-SELECT * FROM pg_gin_pending_stats('test_bigm');
 CREATE INDEX test_bigm_btree ON test_bigm USING btree (col2);
-SELECT * FROM pg_gin_pending_stats('test_bigm_btree');
 DROP INDEX test_bigm_btree;
 
 -- tests for full-text search

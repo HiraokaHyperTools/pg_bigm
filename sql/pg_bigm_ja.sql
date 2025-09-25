@@ -1,6 +1,7 @@
 CREATE EXTENSION pg_bigm;
 
 \pset null '(null)'
+\encoding UTF-8
 
 SET standard_conforming_strings = on;
 SET escape_string_warning = off;
@@ -20,6 +21,7 @@ SELECT show_bigm('インデックスを作成');
 SELECT show_bigm('pg_bigmは検索性能を200%向上させました');
 
 -- tests for creation of full-text search index
+CREATE TABLE test_bigm (col1 text, col2 text);
 CREATE INDEX test_bigm_idx ON test_bigm USING gin (col1 gin_bigm_ops);
 
 \copy test_bigm(col1) from 'data/bigm_ja.csv' with csv

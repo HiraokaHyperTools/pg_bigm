@@ -1,7 +1,8 @@
 /*-------------------------------------------------------------------------
  *
- * Portions Copyright (c) 2004-2012, PostgreSQL Global Development Group
+ * Portions Copyright (c) 2017-2025, pg_bigm Development Group
  * Portions Copyright (c) 2013-2016, NTT DATA Corporation
+ * Portions Copyright (c) 2004-2012, PostgreSQL Global Development Group
  *
  * Changelog:
  *	 2013/01/09
@@ -19,13 +20,16 @@
 #include "catalog/pg_type.h"
 #include "tsearch/ts_locale.h"
 #include "utils/array.h"
+#if PG_VERSION_NUM >= 160000
+#include "utils/guc.h"
+#endif /* PG_VERSION_NUM */
 #include "utils/memutils.h"
 #include "pgut/pgut-be.h"
 
 PG_MODULE_MAGIC;
 
 /* Last update date of pg_bigm */
-#define BIGM_LAST_UPDATE	"2016.10.11"
+#define BIGM_LAST_UPDATE	"2025.09.03"
 
 /* GUC variable */
 bool		bigm_enable_recheck = false;
@@ -45,11 +49,11 @@ PG_FUNCTION_INFO_V1(bigm_similarity_op);
  * here is necessary only for 9.3 or before.
  */
 #if PG_VERSION_NUM < 90400
-Datum		show_bigm(PG_FUNCTION_ARGS);
-Datum		bigmtextcmp(PG_FUNCTION_ARGS);
-Datum		likequery(PG_FUNCTION_ARGS);
-Datum		bigm_similarity(PG_FUNCTION_ARGS);
-Datum		bigm_similarity_op(PG_FUNCTION_ARGS);
+Datum		PGDLLEXPORT show_bigm(PG_FUNCTION_ARGS);
+Datum		PGDLLEXPORT bigmtextcmp(PG_FUNCTION_ARGS);
+Datum		PGDLLEXPORT likequery(PG_FUNCTION_ARGS);
+Datum		PGDLLEXPORT bigm_similarity(PG_FUNCTION_ARGS);
+Datum		PGDLLEXPORT bigm_similarity_op(PG_FUNCTION_ARGS);
 #endif
 
 void		PGDLLEXPORT _PG_init(void);
@@ -152,6 +156,34 @@ unique_array(bigm *a, int len)
 	return curend + 1 - a;
 }
 
+#if PG_VERSION_NUM >= 180000
+/*
+ * This function is equivalent to isspace() but supports multibyte
+ * characters and encoding. It was part of PostgreSQL 17 and earlier
+ * but was removed in commit d3aad4ac57c. This version is copied
+ * from PostgreSQL 17.
+ */
+int
+t_isspace(const char *ptr)
+{
+#define WC_BUF_LEN  3
+	int			clen = pg_mblen(ptr);
+	wchar_t		character[WC_BUF_LEN];
+#if PG_VERSION_NUM >= 190000
+	locale_t mylocale = 0;	/* TODO */
+#else
+	pg_locale_t mylocale = 0;	/* TODO */
+#endif	/* PG_VERSION_NUM >= 190000 */
+
+	if (clen == 1 || database_ctype_is_c)
+		return isspace(TOUCHAR(ptr));
+
+	char2wchar(character, WC_BUF_LEN, ptr, clen, mylocale);
+
+	return iswspace((wint_t) character[0]);
+}
+#endif	/* PG_VERSION_NUM >= 180000 */
+
 #define iswordchr(c)	(!t_isspace(c))
 
 /*
@@ -221,6 +253,8 @@ make_bigrams(bigm *bptr, char *str, int bytelen, int charlen)
 			bptr++;
 
 			lenfirst = lenlast;
+			if ((ptr - str) + lenfirst >= bytelen)
+				break;
 			lenlast = pg_mblen(ptr + lenfirst);
 		}
 	}
@@ -710,25 +744,6 @@ likequery(PG_FUNCTION_ARGS)
 	SET_VARSIZE(result, rp - VARDATA(result) + VARHDRSZ);
 
 	PG_RETURN_TEXT_P(result);
-}
-
-inline int
-bigmstrcmp(char *arg1, int len1, char *arg2, int len2)
-{
-	int			i;
-	int			len = Min(len1, len2);
-
-	for (i = 0; i < len; i++, arg1++, arg2++)
-	{
-		if (*arg1 == *arg2)
-			continue;
-		if (*arg1 < *arg2)
-			return -1;
-		else
-			return 1;
-	}
-
-	return (len1 == len2) ? 0 : ((len1 < len2) ? -1 : 1);
 }
 
 Datum

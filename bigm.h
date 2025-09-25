@@ -1,7 +1,8 @@
 /*-------------------------------------------------------------------------
  *
- * Portions Copyright (c) 2004-2012, PostgreSQL Global Development Group
+ * Portions Copyright (c) 2017-2025, pg_bigm Development Group
  * Portions Copyright (c) 2013-2016, NTT DATA Corporation
+ * Portions Copyright (c) 2004-2012, PostgreSQL Global Development Group
  *
  * Changelog:
  *	 2013/01/09
@@ -45,7 +46,25 @@ typedef struct
 
 #define BIGMSIZE	sizeof(bigm)
 
-extern inline int	bigmstrcmp(char *arg1, int len1, char *arg2, int len2);
+static inline int
+bigmstrcmp(char *arg1, int len1, char *arg2, int len2)
+{
+	int			i;
+	int			len = Min(len1, len2);
+
+	for (i = 0; i < len; i++, arg1++, arg2++)
+	{
+		if (*arg1 == *arg2)
+			continue;
+		if (*arg1 < *arg2)
+			return -1;
+		else
+			return 1;
+	}
+
+	return (len1 == len2) ? 0 : ((len1 < len2) ? -1 : 1);
+}
+
 #define CMPBIGM(a,b) ( bigmstrcmp(((bigm *)a)->str, ((bigm *)a)->bytelen, ((bigm *)b)->str, ((bigm *)b)->bytelen) )
 
 #define CPBIGM(bptr, s, len) do {		\
@@ -67,6 +86,10 @@ typedef struct
 #define CALCGTSIZE(len) (VARHDRSZ + len * sizeof(bigm))
 #define GETARR(x)		( (bigm *)( (char*)x + VARHDRSZ ) )
 #define ARRNELEM(x) ( ( VARSIZE(x) - VARHDRSZ )/sizeof(bigm) )
+
+#if PG_VERSION_NUM >= 180000
+extern int t_isspace(const char *ptr);
+#endif
 
 extern BIGM *generate_bigm(char *str, int slen);
 extern BIGM *generate_wildcard_bigm(const char *str, int slen, bool *removeDups);
